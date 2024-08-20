@@ -3,7 +3,12 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+} from "firebase/auth";
 import { app } from "../../firebase";
 
 export default function Login() {
@@ -22,6 +27,24 @@ export default function Login() {
         email,
         password
       );
+      const idToken = await credential.user.getIdToken();
+
+      await fetch("/api/login", {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+
+      router.push("/");
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  async function handleGoogleLogin() {
+    const provider = new GoogleAuthProvider();
+    try {
+      const credential = await signInWithPopup(getAuth(app), provider);
       const idToken = await credential.user.getIdToken();
 
       await fetch("/api/login", {
@@ -98,6 +121,14 @@ export default function Login() {
             >
               Enter
             </button>
+            <div>
+              <button
+                onClick={handleGoogleLogin}
+                className="w-full text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-primary-800"
+              >
+                Login with Google
+              </button>
+            </div>
             <p className="text-sm font-light text-gray-500 dark:text-gray-400">
               Don&apos;t have an account?{" "}
               <Link
